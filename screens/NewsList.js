@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-nativ
 import NewsCard from '../components/NewsCard';
 import { fetchWebflowNews } from '../services/webflow';
 import { theme } from '../theme';
+import { sanitizeText, formatDate, normalizeImageUrl } from '../services/webflowContent';
 
 function getNewsField(item, keys) {
   for (const key of keys) {
@@ -23,14 +24,14 @@ function getNewsImageUrl(item) {
 
   for (const candidate of candidates) {
     if (!candidate) continue;
-    if (typeof candidate === 'string') return candidate;
-    if (candidate?.url) return candidate.url;
-    if (candidate?.src) return candidate.src;
+    if (typeof candidate === 'string') return normalizeImageUrl(candidate);
+    if (candidate?.url) return normalizeImageUrl(candidate.url);
+    if (candidate?.src) return normalizeImageUrl(candidate.src);
     if (Array.isArray(candidate) && candidate.length > 0) {
       const first = candidate[0];
-      if (typeof first === 'string') return first;
-      if (first?.url) return first.url;
-      if (first?.src) return first.src;
+      if (typeof first === 'string') return normalizeImageUrl(first);
+      if (first?.url) return normalizeImageUrl(first.url);
+      if (first?.src) return normalizeImageUrl(first.src);
     }
   }
 
@@ -101,13 +102,13 @@ export default function NewsList({ navigation }) {
       contentContainerStyle={styles.list}
       renderItem={({ item }) => (
         <NewsCard
-          title={getNewsField(item, ['name', 'title'])}
-          description={getNewsField(item, ['summary', 'description', 'excerpt'])}
-          date={getNewsField(item, ['date', 'publishedOn', 'published_at', '_createdOn'])}
+          title={sanitizeText(getNewsField(item, ['name', 'title']))}
+          description={sanitizeText(getNewsField(item, ['summary', 'description', 'excerpt']))}
+          date={formatDate(getNewsField(item, ['date', 'publishedOn', 'published_at', '_createdOn']))}
           imageUrl={getNewsImageUrl(item)}
-          summary={getNewsField(item, ['summary', 'description', 'excerpt'])}
-          text={getNewsField(item, ['text', 'content', 'body', 'description'])}
-          campus={getNewsField(item, ['campus', 'campusName'])}
+          summary={sanitizeText(getNewsField(item, ['summary', 'description', 'excerpt']))}
+          text={sanitizeText(getNewsField(item, ['text', 'content', 'body', 'description']))}
+          campus={sanitizeText(getNewsField(item, ['campus', 'campusName']))}
           onPress={(payload) => navigation.navigate('NewsDetail', payload || item)}
         />
       )}

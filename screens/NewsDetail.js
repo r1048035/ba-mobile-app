@@ -1,22 +1,29 @@
 import { ScrollView, StyleSheet, Text, View, Image } from 'react-native';
 
 import { theme } from '../theme';
+import { sanitizeText, formatDate, normalizeImageUrl } from '../services/webflowContent';
 
 export default function NewsDetail({ route, navigation }) {
   const { title, date, summary, text, content, description, campus, campusColor, image, imageUrl } = route.params || {};
 
   // support different property names from API and fallbacks
-  const bodyText = text || content || description || '';
-  const summaryText = summary || description || '';
-  const imageSource = imageUrl || image || null;
+  const rawBody = text || content || description || '';
+  const rawSummary = summary || description || '';
+  const imageSource = normalizeImageUrl(imageUrl) || normalizeImageUrl(image) || (image && image.uri) || null;
+
+  const cleanTitle = sanitizeText(title || '');
+  const cleanDate = formatDate(date);
+  const bodyText = sanitizeText(rawBody);
+  const summaryText = sanitizeText(rawSummary);
+  const campusClean = sanitizeText(campus || '');
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <Text style={styles.label}>Nieuws</Text>
-        <Text style={styles.title}>{title}</Text>
-        {date ? <Text style={styles.date}>{date}</Text> : null}
-        {campus ? <Text style={[styles.campus, campusColor ? { color: campusColor } : null]}>{campus}</Text> : null}
+        <Text style={styles.title}>{cleanTitle}</Text>
+        {cleanDate ? <Text style={styles.date}>{cleanDate}</Text> : null}
+        {campusClean ? <Text style={[styles.campus, campusColor ? { color: campusColor } : null]}>{campusClean}</Text> : null}
 
         {imageSource ? (
           <Image source={{ uri: imageSource }} style={styles.image} resizeMode="cover" />

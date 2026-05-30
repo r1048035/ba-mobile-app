@@ -5,6 +5,7 @@ import { Roboto_400Regular } from '@expo-google-fonts/roboto';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { CartProvider } from './context/CartContext';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import HomeScreen from './screens/HomeScreen';
@@ -37,7 +38,8 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
+      <CartProvider>
+        <NavigationContainer>
         <StatusBar style="dark" />
         <Stack.Navigator
           initialRouteName="Home"
@@ -61,7 +63,8 @@ export default function App() {
           <Stack.Screen name="CampusDetail" component={CampusDetail} options={{ title: 'Campus' }} />
           <Stack.Screen name="StaticPage" component={StaticPage} options={{ title: '' }} />
         </Stack.Navigator>
-      </NavigationContainer>
+        </NavigationContainer>
+      </CartProvider>
     </SafeAreaProvider>
   );
 }

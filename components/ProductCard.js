@@ -12,7 +12,7 @@ export default function ProductCard({ title, description, image, price, onPress 
           {description}
         </Text>
         <View style={styles.footerRow}>
-          <Text style={styles.price}>€ {price}</Text>
+          <Text style={styles.price}>€ {price || ''}</Text>
           <Text style={styles.cta}>Bekijk</Text>
         </View>
       </View>
@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.colors.primary,
   },
+  
   cta: {
     fontFamily: theme.typography.subtitle,
     fontSize: 13,

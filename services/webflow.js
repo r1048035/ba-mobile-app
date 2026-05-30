@@ -62,6 +62,18 @@ export async function fetchWebflowProducts() {
   return { items };
 }
 
+export async function getProductById(itemId) {
+  if (!WEBFLOW_SITE_ID || !WEBFLOW_TOKEN || !WEBFLOW_PRODUCTS_COLLECTION_ID) {
+    throw new Error('Missing Webflow products config');
+  }
+  const path = `/collections/${WEBFLOW_PRODUCTS_COLLECTION_ID}/items/${itemId}`;
+  const item = await webflowFetch(path);
+  try {
+    console.log('[webflow] getProductById:', { id: itemId, ok: !!item });
+  } catch (e) {}
+  return item;
+}
+
 export async function fetchWebflowNews() {
   if (!WEBFLOW_SITE_ID || !WEBFLOW_TOKEN || !WEBFLOW_NEWS_COLLECTION_ID) {
     throw new Error('Missing Webflow news config');
@@ -78,4 +90,22 @@ export async function fetchWebflowCampuses() {
 
   const items = await fetchAllCollectionItems(WEBFLOW_CAMPUSES_COLLECTION_ID);
   return { items };
+}
+
+export async function getItemById(collectionId, itemId) {
+  if (!WEBFLOW_SITE_ID || !WEBFLOW_TOKEN || !collectionId) {
+    throw new Error('Missing Webflow config');
+  }
+  const path = `/collections/${collectionId}/items/${itemId}`;
+  const item = await webflowFetch(path);
+  try { console.log('[webflow] getItemById', { collectionId, itemId, ok: !!item }); } catch (e) {}
+  return item;
+}
+
+export async function getNewsById(itemId) {
+  return getItemById(WEBFLOW_NEWS_COLLECTION_ID, itemId);
+}
+
+export async function getCampusById(itemId) {
+  return getItemById(WEBFLOW_CAMPUSES_COLLECTION_ID, itemId);
 }

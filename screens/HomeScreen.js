@@ -153,7 +153,7 @@ export default function HomeScreen({ navigation }) {
               description={item.description}
               price={item.price}
               image={item.imageUrl ? { uri: item.imageUrl } : undefined}
-              onPress={() => navigation.navigate('ProductDetail', item)}
+              onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
             />
           )}
         />
