@@ -95,6 +95,10 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.ctaText}>ONZE CAMPUSSEN</Text>
       </Pressable>
 
+      <Pressable style={styles.studyFinderBtn} onPress={() => navigation.navigate('StudyFinder')}>
+        <Text style={styles.studyFinderText}>Vind een studierichting</Text>
+      </Pressable>
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Campussen</Text>
         <FlatList
@@ -183,13 +187,14 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    
     marginBottom: theme.spacing.lg,
   },
   logo: {
     width: 44,
     height: 44,
     borderRadius: 22,
+    marginRight: theme.spacing.md,
   },
   headerTitle: {
     fontFamily: theme.typography.title,
@@ -229,6 +234,21 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.subtitle,
     fontSize: 20,
     letterSpacing: 1,
+  },
+  studyFinderBtn: {
+    backgroundColor: theme.colors.cardBackground,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  studyFinderText: {
+    fontFamily: theme.typography.subtitle,
+    fontSize: 16,
+    color: theme.colors.text,
   },
   section: {
     marginBottom: theme.spacing.lg,

@@ -15,6 +15,7 @@ import Campuses from './screens/Campuses';
 import Products from './screens/Products';
 import StaticPage from './screens/StaticPage';
 import NewsList from './screens/NewsList';
+import StudyFinder from './screens/StudyFinder';
 import { theme } from './theme';
 
 const Stack = createNativeStackNavigator();
@@ -52,6 +53,7 @@ export default function App() {
         >
           <Stack.Screen name="Home" component={HomeScreen} options={{ headerTitle: 'BA App' }} />
           <Stack.Screen name="Campuses" component={Campuses} options={{ title: 'Campussen' }} />
+          <Stack.Screen name="StudyFinder" component={StudyFinder} options={{ title: 'Study Finder' }} />
           <Stack.Screen name="Products" component={Products} options={{ title: 'Producten' }} />
           <Stack.Screen name="NewsList" component={NewsList} options={{ title: 'Nieuws' }} />
           <Stack.Screen name="ProductDetail" component={ProductDetail} options={{ title: 'Product' }} />

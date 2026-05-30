@@ -35,13 +35,14 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    
     marginBottom: theme.spacing.sm,
   },
   dot: {
     width: 44,
     height: 44,
     borderRadius: 22,
+    marginRight: theme.spacing.md,
   },
   name: {
     fontFamily: theme.typography.title,
