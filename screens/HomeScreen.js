@@ -99,6 +99,11 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.studyFinderText}>Vind een studierichting</Text>
       </Pressable>
 
+      <Pressable style={styles.gameBtn} onPress={() => navigation.navigate('CatchTheBooks')}>
+        <Text style={styles.gameBtnLabel}>Speel Catch the Books</Text>
+        <Text style={styles.gameBtnText}>Vang boeken, scoor punten en versla de timer.</Text>
+      </Pressable>
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Campussen</Text>
         <FlatList
@@ -249,6 +254,29 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.subtitle,
     fontSize: 16,
     color: theme.colors.text,
+  },
+  gameBtn: {
+    backgroundColor: '#F1F6E6',
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: '#D7E7AD',
+  },
+  gameBtnLabel: {
+    fontFamily: theme.typography.subtitle,
+    fontSize: 17,
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  gameBtnText: {
+    fontFamily: theme.typography.body,
+    fontSize: 14,
+    color: theme.colors.mutedText,
+    textAlign: 'center',
   },
   section: {
     marginBottom: theme.spacing.lg,
