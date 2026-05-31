@@ -1,10 +1,49 @@
-import { ScrollView, StyleSheet, Text, View, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View, Image, ActivityIndicator } from 'react-native';
 
 import { theme } from '../theme';
-import { sanitizeText, formatDate, normalizeImageUrl } from '../services/webflowContent';
+import { getNewsById } from '../services/webflow';
+import { normalizeNews, sanitizeText, formatDate, normalizeImageUrl } from '../services/webflowContent';
 
 export default function NewsDetail({ route, navigation }) {
-  const { title, date, summary, text, content, description, campus, campusColor, image, imageUrl } = route.params || {};
+  const params = route.params || {};
+  const { id } = params;
+  const [item, setItem] = useState(id ? null : params);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const res = await getNewsById(id);
+        if (!mounted) return;
+        const raw = res?.items ? res.items[0] : res;
+        setItem(normalizeNews(raw, 0));
+      } catch (error) {
+        console.warn('news load failed', error.message);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  const { title, date, summary, text, content, description, campus, campusColor, image, imageUrl } = item || {};
+
+  if (loading && !item) {
+    return (
+      <View style={styles.screen}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
 
   // support different property names from API and fallbacks
   const rawBody = text || content || description || '';

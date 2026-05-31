@@ -1,10 +1,50 @@
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, Image, ActivityIndicator } from 'react-native';
 
 import { theme } from '../theme';
+import { getCampusById } from '../services/webflow';
+import { normalizeCampus } from '../services/webflowContent';
 
 export default function CampusDetail({ route }) {
-  const { name, description, addressLines = [], color, accentColor } = route.params || {};
+  const params = route.params || {};
+  const { id } = params;
+  const [campus, setCampus] = useState(id ? null : params);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const res = await getCampusById(id);
+        if (!mounted) return;
+        const raw = res?.items ? res.items[0] : res;
+        setCampus(normalizeCampus(raw, 0));
+      } catch (error) {
+        console.warn('campus load failed', error.message);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  const { name, description, addressLines = [], color, accentColor, imageUrl } = campus || {};
   const campusColor = color || accentColor || theme.colors.primary;
+
+  if (loading && !campus) {
+    return (
+      <View style={styles.screen}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
@@ -12,6 +52,7 @@ export default function CampusDetail({ route }) {
         <View style={[styles.accent, { backgroundColor: campusColor }]} />
         <Text style={[styles.label, { color: campusColor }]}>Campus</Text>
         <Text style={styles.title}>{name}</Text>
+        {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" /> : null}
         {description ? <Text style={styles.body}>{description}</Text> : null}
         {addressLines.length > 0 ? (
           <View style={styles.addressWrap}>
@@ -44,6 +85,12 @@ const styles = StyleSheet.create({
   accent: {
     height: 6,
     borderRadius: 999,
+    marginBottom: theme.spacing.md,
+  },
+  image: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    borderRadius: 14,
     marginBottom: theme.spacing.md,
   },
   label: {

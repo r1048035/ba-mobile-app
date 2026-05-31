@@ -1,6 +1,7 @@
 const WEBFLOW_TOKEN = process.env.EXPO_PUBLIC_WEBFLOW_TOKEN;
 const WEBFLOW_SITE_ID = process.env.EXPO_PUBLIC_WEBFLOW_SITE_ID;
 const WEBFLOW_PRODUCTS_COLLECTION_ID = process.env.EXPO_PUBLIC_WEBFLOW_PRODUCTS_COLLECTION_ID;
+const WEBFLOW_CATEGORIES_COLLECTION_ID = '6a196c7c8e89f3b118f116c9';
 const WEBFLOW_NEWS_COLLECTION_ID = process.env.EXPO_PUBLIC_WEBFLOW_NEWS_COLLECTION_ID;
 const WEBFLOW_CAMPUSES_COLLECTION_ID = process.env.EXPO_PUBLIC_WEBFLOW_CAMPUSES_COLLECTION_ID;
 
@@ -171,6 +172,15 @@ export async function fetchWebflowProducts() {
     // ignore logging errors
   }
   return { items: enrichedItems };
+}
+
+export async function fetchWebflowCategories() {
+  if (!WEBFLOW_SITE_ID || !WEBFLOW_TOKEN || !WEBFLOW_CATEGORIES_COLLECTION_ID) {
+    throw new Error('Missing Webflow categories config');
+  }
+
+  const items = await fetchAllCollectionItems(WEBFLOW_CATEGORIES_COLLECTION_ID);
+  return { items };
 }
 
 export async function getProductById(itemId) {

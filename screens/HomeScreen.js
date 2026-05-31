@@ -130,6 +130,7 @@ export default function HomeScreen({ navigation }) {
           scrollEnabled={false}
           renderItem={({ item }) => (
             <NewsCard
+                id={item.id}
               title={item.title}
               description={item.description}
               date={item.date}
@@ -137,6 +138,7 @@ export default function HomeScreen({ navigation }) {
               summary={item.summary}
               text={item.text}
               campus={item.campus}
+                category={item.category}
               onPress={(payload) => navigation.navigate('NewsDetail', payload || item)}
             />
           )}

@@ -11,7 +11,7 @@ export default function StudyCard({ title, campus, degree, finality, summary, on
         <View style={styles.tag}><Text style={styles.tagText}>{finality}</Text></View>
       </View>
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.summary}>{summary}</Text>
+      {summary ? <Text style={styles.summary}>{summary}</Text> : null}
     </Pressable>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, TextInput, Button, Switch } from 'react-native';
 import StudyCard from '../components/StudyCard';
 import { theme } from '../theme';
 import studies from '../data/studies';
@@ -12,6 +12,7 @@ export default function StudyFinder({ navigation }) {
   const [finality, setFinality] = useState('Alle');
   const [query, setQuery] = useState('');
   const [searchText, setSearchText] = useState('');
+  const [compactMode, setCompactMode] = useState(false);
 
   const campuses = useMemo(() => ['Alle', ...campusesData.map(c => c.name)], []);
   const degrees = useMemo(() => ['Alle', '1ste graad', '2de graad', '3de graad', 'HBO5'], []);
@@ -92,6 +93,25 @@ export default function StudyFinder({ navigation }) {
         />
       </View>
 
+      <View style={styles.toggleRow}>
+        <Text style={styles.toggleText}>Compacte weergave</Text>
+        <Switch value={compactMode} onValueChange={setCompactMode} />
+      </View>
+
+      <View style={styles.resetWrap}>
+        <Button
+          title="Reset filters"
+          onPress={() => {
+            setCampus('Alle');
+            setDegree('Alle');
+            setFinality('Alle');
+            setQuery('');
+            setSearchText('');
+            setCompactMode(false);
+          }}
+        />
+      </View>
+
       <FlatList
         data={filtered}
         keyExtractor={(i) => i.id}
@@ -101,7 +121,7 @@ export default function StudyFinder({ navigation }) {
             campus={item.campus}
             degree={item.degree}
             finality={item.finality}
-            summary={item.summary}
+            summary={compactMode ? '' : item.summary}
             onPress={() => navigation.navigate('StaticPage', { title: item.title, body: item.summary })}
           />
         )}
@@ -115,7 +135,7 @@ export default function StudyFinder({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background, padding: theme.spacing.lg },
   title: { fontFamily: theme.typography.title, fontSize: 28, marginBottom: theme.spacing.sm },
-  subtitle: { fontFamily: theme.typography.body, color: theme.colors.muted, marginBottom: theme.spacing.md },
+  subtitle: { fontFamily: theme.typography.body, color: theme.colors.mutedText, marginBottom: theme.spacing.md },
   filtersRow: { flexDirection: 'row', marginBottom: theme.spacing.md, alignItems: 'center' },
   filterPill: { backgroundColor: '#fff', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#eee' },
   filterPillSpacing: { marginRight: theme.spacing.sm },
@@ -130,4 +150,7 @@ const styles = StyleSheet.create({
   searchBtn: { backgroundColor: theme.colors.primary, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8, marginLeft: 8 },
   searchBtnText: { color: '#fff', fontFamily: theme.typography.subtitle },
   searchRow: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: theme.spacing.sm, marginBottom: theme.spacing.md },
+  toggleText: { fontFamily: theme.typography.body, color: theme.colors.text },
+  resetWrap: { marginBottom: theme.spacing.md },
 });

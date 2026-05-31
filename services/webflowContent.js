@@ -144,11 +144,13 @@ export function normalizeCampus(item, index = 0) {
   const name = sanitizeText(getWebflowField(item, ['name', 'title']) || 'Campus');
   const colorKey = getWebflowField(item, ['colorKey', 'campusColorKey', 'campusKey']) || name;
   const addressLines = normalizeAddressLines(getWebflowField(item, ['addressLines', 'address', 'adress', 'location', 'streetAddress']));
+  const focus = sanitizeText(getWebflowField(item, ['focus', 'description', 'summary', 'excerpt']) || '');
 
   return {
     id: createId(item, index, 'campus'),
     name,
-    description: sanitizeText(getWebflowField(item, ['description', 'summary', 'excerpt']) || ''),
+    description: focus,
+    focus,
     addressLines,
     color: theme.campusColors[colorKey] || theme.colors.primary,
     imageUrl: normalizeImageUrl(getWebflowImageUrl(item)),
@@ -158,11 +160,15 @@ export function normalizeCampus(item, index = 0) {
 export function normalizeProduct(item, index = 0) {
   const rawPrice = getWebflowField(item, ['price', 'cost', 'amount', 'prijs']) || '';
   const formattedPrice = parseAndFormatPrice(rawPrice, item);
+  const rawCategory = getWebflowField(item, ['category', 'categories', 'productCategory', 'type']) || [];
+  const categoryIds = Array.isArray(rawCategory) ? rawCategory.filter(Boolean).map(String) : rawCategory ? [String(rawCategory)] : [];
 
   return {
     id: createId(item, index, 'product'),
     title: sanitizeText(getWebflowField(item, ['name', 'title']) || 'Product'),
     description: sanitizeText(getWebflowField(item, ['summary', 'description', 'excerpt', 'body']) || ''),
+    category: categoryIds.join(' | '),
+    categoryIds,
     price: formattedPrice,
     imageUrl: normalizeImageUrl(getWebflowImageUrl(item)),
   };
@@ -241,13 +247,16 @@ function findNumericCandidate(obj, depth = 2) {
 }
 
 export function normalizeNews(item, index = 0) {
+  const rawDate = getWebflowField(item, ['dateValue', 'date', 'publishedOn', 'published_at', '_createdOn']) || '';
   return {
     id: createId(item, index, 'news'),
     title: sanitizeText(getWebflowField(item, ['name', 'title']) || 'Nieuws'),
     description: sanitizeText(getWebflowField(item, ['summary', 'description', 'excerpt']) || ''),
     summary: sanitizeText(getWebflowField(item, ['summary', 'description', 'excerpt']) || ''),
     text: sanitizeText(getWebflowField(item, ['text', 'content', 'body', 'description']) || ''),
-    date: formatDate(getWebflowField(item, ['date', 'publishedOn', 'published_at', '_createdOn']) || ''),
+    date: formatDate(rawDate),
+    dateValue: rawDate,
+    category: sanitizeText(getWebflowField(item, ['category', 'categories', 'newsCategory', 'type']) || 'Alle'),
     campus: getWebflowField(item, ['campus', 'campusName']) || '',
     campusColor: getWebflowField(item, ['campusColor']) || '',
     imageUrl: normalizeImageUrl(getWebflowImageUrl(item)),

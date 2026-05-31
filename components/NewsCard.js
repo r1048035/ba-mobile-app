@@ -2,12 +2,13 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { theme } from '../theme';
 
-export default function NewsCard({ title, description, image, date, summary, text, campus, campusColor, imageUrl, onPress }) {
+export default function NewsCard({ id, title, description, image, date, summary, text, campus, campusColor, imageUrl, category, onPress }) {
   // When navigating, include richer payload so NewsDetail can show all fields
   const handlePress = () => {
     if (typeof onPress === 'function') {
       const body = text || description || summary || '';
       onPress({
+        id,
         title,
         date,
         summary: summary || description || body,
@@ -16,6 +17,7 @@ export default function NewsCard({ title, description, image, date, summary, tex
         description,
         campus,
         campusColor,
+        category,
         imageUrl: imageUrl || (image && image.uri),
         image,
       });

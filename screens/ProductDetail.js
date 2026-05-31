@@ -12,6 +12,8 @@ export default function ProductDetail({ route }) {
   const [loading, setLoading] = useState(false);
   const [qty, setQty] = useState(1);
   const { addItem } = useCart();
+  const priceValue = Number(String(item?.price || '0').replace(',', '.')) || 0;
+  const totalPrice = (priceValue * qty).toFixed(2).replace('.', ',');
 
   useEffect(() => {
     let mounted = true;
@@ -49,6 +51,8 @@ export default function ProductDetail({ route }) {
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.body}>{item.description}</Text>
         <Text style={styles.price}>€ {item.price || ''}</Text>
+        <Text style={styles.total}>Totaal: € {totalPrice}</Text>
+        <Text style={styles.helper}>Aantal kan niet lager dan 1.</Text>
 
         <View style={{ flexDirection: 'row', marginTop: 16, alignItems: 'center' }}>
           <Pressable onPress={() => setQty(Math.max(1, qty - 1))} style={styles.qtyBtn}><Text style={styles.qtyText}>−</Text></Pressable>
@@ -101,6 +105,18 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.subtitle,
     fontSize: 20,
     color: theme.colors.primary,
+  },
+  total: {
+    marginTop: 10,
+    fontFamily: theme.typography.subtitle,
+    fontSize: 18,
+    color: theme.colors.text,
+  },
+  helper: {
+    marginTop: 4,
+    fontFamily: theme.typography.body,
+    fontSize: 13,
+    color: theme.colors.mutedText,
   },
   qtyBtn: { padding: 8, borderRadius: 6, backgroundColor: '#fff', borderWidth: 1, borderColor: '#eee' },
   qtyDisplay: { paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
