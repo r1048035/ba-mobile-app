@@ -54,14 +54,6 @@ export default function Products({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Producten</Text>
-      <Pressable onPress={() => setShowDebug((s) => !s)} style={{ marginBottom: 12 }}>
-        <Text style={{ color: theme.colors.primary }}>{showDebug ? 'Verberg debug' : 'Toon debug'}</Text>
-      </Pressable>
-      {showDebug && items && items.length > 0 ? (
-        <View style={{ backgroundColor: '#fff', padding: 8, borderRadius: 8, marginBottom: 12 }}>
-          <Text style={{ fontFamily: theme.typography.body, fontSize: 12 }}>{JSON.stringify(items[0], null, 2)}</Text>
-        </View>
-      ) : null}
       <FlatList
         data={items}
         keyExtractor={(i) => i.id}

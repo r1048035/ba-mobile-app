@@ -4,6 +4,9 @@ const WEBFLOW_PRODUCTS_COLLECTION_ID = process.env.EXPO_PUBLIC_WEBFLOW_PRODUCTS_
 const WEBFLOW_NEWS_COLLECTION_ID = process.env.EXPO_PUBLIC_WEBFLOW_NEWS_COLLECTION_ID;
 const WEBFLOW_CAMPUSES_COLLECTION_ID = process.env.EXPO_PUBLIC_WEBFLOW_CAMPUSES_COLLECTION_ID;
 
+let cachedSkuCollectionId = null;
+let cachedSkuPriceMap = null;
+
 function buildWebflowUrl(path, params = {}) {
   const url = new URL(`https://api.webflow.com/v2/sites/${WEBFLOW_SITE_ID}${path}`);
   Object.entries(params).forEach(([key, value]) => {
@@ -48,18 +51,126 @@ async function fetchAllCollectionItems(collectionId) {
   return allItems;
 }
 
+async function getSkuCollectionId() {
+  if (cachedSkuCollectionId) return cachedSkuCollectionId;
+
+  if (!WEBFLOW_SITE_ID || !WEBFLOW_TOKEN) {
+    throw new Error('Missing Webflow config');
+  }
+
+  const response = await webflowFetch('/collections');
+  const collections = response.collections || response.items || [];
+  const skuCollection = collections.find((collection) => {
+    const displayName = String(collection.displayName || '').toLowerCase();
+    const singularName = String(collection.singularName || '').toLowerCase();
+    const slug = String(collection.slug || '').toLowerCase();
+    return slug === 'sku' || displayName === 'skus' || singularName === 'sku';
+  });
+
+  if (!skuCollection?.id) {
+    throw new Error('Missing Webflow SKU collection');
+  }
+
+  cachedSkuCollectionId = skuCollection.id;
+  return cachedSkuCollectionId;
+}
+
+function formatSkuPrice(priceField) {
+  if (!priceField) return '';
+
+  if (typeof priceField === 'number' && !isNaN(priceField)) {
+    return new Intl.NumberFormat('nl-BE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(priceField / 100);
+  }
+
+  if (typeof priceField === 'object') {
+    const rawValue = priceField.value ?? priceField.amount ?? priceField.price ?? null;
+    const numericValue = Number(String(rawValue ?? '').replace(',', '.'));
+    if (!isNaN(numericValue)) {
+      return new Intl.NumberFormat('nl-BE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(numericValue / 100);
+    }
+  }
+
+  const fallbackValue = Number(String(priceField).replace(',', '.'));
+  if (!isNaN(fallbackValue)) {
+    return new Intl.NumberFormat('nl-BE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(fallbackValue / 100);
+  }
+
+  return '';
+}
+
+async function getSkuPriceMap() {
+  if (cachedSkuPriceMap) return cachedSkuPriceMap;
+
+  const skuCollectionId = await getSkuCollectionId();
+  const skuItems = await fetchAllCollectionItems(skuCollectionId);
+  const priceMap = new Map();
+
+  skuItems.forEach((skuItem) => {
+    const productId = skuItem?.fieldData?.product;
+    const price = formatSkuPrice(skuItem?.fieldData?.price);
+    if (productId && price) {
+      priceMap.set(productId, price);
+    }
+  });
+
+  cachedSkuPriceMap = priceMap;
+  return cachedSkuPriceMap;
+}
+
+async function getSkuItemById(skuId) {
+  if (!skuId) return null;
+  const skuCollectionId = await getSkuCollectionId();
+  return webflowFetch(`/collections/${skuCollectionId}/items/${skuId}`);
+}
+
+async function attachSkuPriceToProduct(productItem) {
+  if (!productItem) return productItem;
+
+  const skuId = productItem?.fieldData?.['default-sku'] || productItem?.fieldData?.defaultSku || productItem?.defaultSku;
+  if (!skuId) return productItem;
+
+  try {
+    const skuItem = await getSkuItemById(skuId);
+    const price = formatSkuPrice(skuItem?.fieldData?.price);
+    if (!price) return productItem;
+    return {
+      ...productItem,
+      price,
+      fieldData: {
+        ...productItem.fieldData,
+        price,
+      },
+    };
+  } catch (error) {
+    return productItem;
+  }
+}
+
 export async function fetchWebflowProducts() {
   if (!WEBFLOW_SITE_ID || !WEBFLOW_TOKEN || !WEBFLOW_PRODUCTS_COLLECTION_ID) {
     throw new Error('Missing Webflow products config');
   }
 
   const items = await fetchAllCollectionItems(WEBFLOW_PRODUCTS_COLLECTION_ID);
+  const skuPriceMap = await getSkuPriceMap();
+  const enrichedItems = items.map((item) => {
+    const price = skuPriceMap.get(item?.id);
+    if (!price) return item;
+    return {
+      ...item,
+      price,
+      fieldData: {
+        ...item.fieldData,
+        price,
+      },
+    };
+  });
   try {
-    console.log('[webflow] fetchWebflowProducts:', { collectionId: WEBFLOW_PRODUCTS_COLLECTION_ID, count: items.length, sample: items.slice(0, 5).map(i => i._id || i.id || i.slug) });
+    console.log('[webflow] fetchWebflowProducts:', { collectionId: WEBFLOW_PRODUCTS_COLLECTION_ID, count: enrichedItems.length, sample: enrichedItems.slice(0, 5).map(i => i._id || i.id || i.slug) });
   } catch (e) {
     // ignore logging errors
   }
-  return { items };
+  return { items: enrichedItems };
 }
 
 export async function getProductById(itemId) {
@@ -68,10 +179,11 @@ export async function getProductById(itemId) {
   }
   const path = `/collections/${WEBFLOW_PRODUCTS_COLLECTION_ID}/items/${itemId}`;
   const item = await webflowFetch(path);
+  const enrichedItem = await attachSkuPriceToProduct(item);
   try {
-    console.log('[webflow] getProductById:', { id: itemId, ok: !!item });
+    console.log('[webflow] getProductById:', { id: itemId, ok: !!enrichedItem });
   } catch (e) {}
-  return item;
+  return enrichedItem;
 }
 
 export async function fetchWebflowNews() {

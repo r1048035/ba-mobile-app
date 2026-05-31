@@ -143,7 +143,7 @@ export function formatDate(rawDate) {
 export function normalizeCampus(item, index = 0) {
   const name = sanitizeText(getWebflowField(item, ['name', 'title']) || 'Campus');
   const colorKey = getWebflowField(item, ['colorKey', 'campusColorKey', 'campusKey']) || name;
-  const addressLines = normalizeAddressLines(getWebflowField(item, ['addressLines', 'address', 'location', 'streetAddress']));
+  const addressLines = normalizeAddressLines(getWebflowField(item, ['addressLines', 'address', 'adress', 'location', 'streetAddress']));
 
   return {
     id: createId(item, index, 'campus'),
@@ -156,7 +156,7 @@ export function normalizeCampus(item, index = 0) {
 }
 
 export function normalizeProduct(item, index = 0) {
-  const rawPrice = getWebflowField(item, ['price', 'cost', 'amount']) || '';
+  const rawPrice = getWebflowField(item, ['price', 'cost', 'amount', 'prijs']) || '';
   const formattedPrice = parseAndFormatPrice(rawPrice, item);
 
   return {
@@ -176,11 +176,22 @@ function parseAndFormatPrice(raw, itemFallback) {
     candidate = found || '';
   }
   if (candidate == null || candidate === '') return '';
+  if (typeof candidate === 'object' || Array.isArray(candidate)) {
+    if (!Array.isArray(candidate) && candidate.value != null) {
+      const numericValue = Number(String(candidate.value).replace(',', '.'));
+      if (!isNaN(numericValue)) {
+        const majorUnitValue = candidate.unit ? numericValue / 100 : numericValue;
+        return new Intl.NumberFormat('nl-BE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(majorUnitValue);
+      }
+    }
+    const nested = findNumericCandidate(candidate, 3);
+    if (nested == null || nested === '') return '';
+    candidate = nested;
+  }
   const rawVal = candidate;
-  if (raw == null || raw === '') return '';
   // If already a number
   if (typeof rawVal === 'number' && !isNaN(rawVal)) {
-    return new Intl.NumberFormat('nl-BE', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(rawVal);
+    return new Intl.NumberFormat('nl-BE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(rawVal);
   }
   // Try to extract numeric part from strings
   let s = String(rawVal);
@@ -201,7 +212,7 @@ function parseAndFormatPrice(raw, itemFallback) {
   }
   const n = parseFloat(s);
   if (isNaN(n)) return '';
-  return new Intl.NumberFormat('nl-BE', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n);
+  return new Intl.NumberFormat('nl-BE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 }
 
 function findNumericCandidate(obj, depth = 2) {

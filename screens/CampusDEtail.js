@@ -13,11 +13,12 @@ export default function CampusDetail({ route }) {
         <Text style={[styles.label, { color: campusColor }]}>Campus</Text>
         <Text style={styles.title}>{name}</Text>
         {description ? <Text style={styles.body}>{description}</Text> : null}
-
-        {addressLines && addressLines.length > 0 ? (
+        {addressLines.length > 0 ? (
           <View style={styles.addressWrap}>
-            {addressLines.map((l, i) => (
-              <Text key={i} style={styles.address}>{l}</Text>
+            {addressLines.map((line, index) => (
+              <Text key={index} style={styles.address}>
+                {line}
+              </Text>
             ))}
           </View>
         ) : null}
