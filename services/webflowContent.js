@@ -13,6 +13,8 @@ export function getWebflowImageUrl(item) {
     getWebflowField(item, ['image']),
     getWebflowField(item, ['main-image']),
     getWebflowField(item, ['mainImage']),
+    getWebflowField(item, ['more-images']),
+    getWebflowField(item, ['moreImages']),
     getWebflowField(item, ['cover']),
     getWebflowField(item, ['thumbnail']),
   ];

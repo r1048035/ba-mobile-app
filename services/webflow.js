@@ -7,6 +7,7 @@ const WEBFLOW_CAMPUSES_COLLECTION_ID = process.env.EXPO_PUBLIC_WEBFLOW_CAMPUSES_
 
 let cachedSkuCollectionId = null;
 let cachedSkuPriceMap = null;
+let cachedSkuImageMap = null;
 
 function buildWebflowUrl(path, params = {}) {
   const url = new URL(`https://api.webflow.com/v2/sites/${WEBFLOW_SITE_ID}${path}`);
@@ -102,20 +103,45 @@ function formatSkuPrice(priceField) {
 async function getSkuPriceMap() {
   if (cachedSkuPriceMap) return cachedSkuPriceMap;
 
-  const skuCollectionId = await getSkuCollectionId();
-  const skuItems = await fetchAllCollectionItems(skuCollectionId);
+  const skuDataMap = await getSkuImageMap();
   const priceMap = new Map();
 
-  skuItems.forEach((skuItem) => {
-    const productId = skuItem?.fieldData?.product;
-    const price = formatSkuPrice(skuItem?.fieldData?.price);
-    if (productId && price) {
-      priceMap.set(productId, price);
+  skuDataMap.forEach((skuData, productId) => {
+    if (skuData?.price) {
+      priceMap.set(productId, skuData.price);
     }
   });
 
   cachedSkuPriceMap = priceMap;
   return cachedSkuPriceMap;
+}
+
+async function getSkuImageMap() {
+  if (cachedSkuImageMap) return cachedSkuImageMap;
+
+  const skuCollectionId = await getSkuCollectionId();
+  const skuItems = await fetchAllCollectionItems(skuCollectionId);
+  const skuMap = new Map();
+
+  skuItems.forEach((skuItem) => {
+    const productId = skuItem?.fieldData?.product;
+    if (!productId) return;
+
+    const mainImage = skuItem?.fieldData?.['main-image'] || skuItem?.fieldData?.mainImage || null;
+    const moreImages = skuItem?.fieldData?.['more-images'] || skuItem?.fieldData?.moreImages || [];
+    const price = formatSkuPrice(skuItem?.fieldData?.price);
+
+    skuMap.set(productId, {
+      price,
+      'main-image': mainImage,
+      mainImage,
+      'more-images': moreImages,
+      moreImages,
+    });
+  });
+
+  cachedSkuImageMap = skuMap;
+  return cachedSkuImageMap;
 }
 
 async function getSkuItemById(skuId) {
@@ -130,15 +156,21 @@ async function attachSkuPriceToProduct(productItem) {
   const skuId = productItem?.fieldData?.['default-sku'] || productItem?.fieldData?.defaultSku || productItem?.defaultSku;
   if (!skuId) return productItem;
 
+  const skuCollectionId = await getSkuCollectionId();
+
   try {
     const skuItem = await getSkuItemById(skuId);
     const price = formatSkuPrice(skuItem?.fieldData?.price);
     if (!price) return productItem;
     return {
       ...productItem,
+      'main-image': skuItem?.fieldData?.['main-image'] || skuItem?.fieldData?.mainImage || productItem?.fieldData?.['main-image'] || productItem?.fieldData?.mainImage || null,
+      'more-images': skuItem?.fieldData?.['more-images'] || skuItem?.fieldData?.moreImages || productItem?.fieldData?.['more-images'] || productItem?.fieldData?.moreImages || [],
       price,
       fieldData: {
         ...productItem.fieldData,
+        'main-image': skuItem?.fieldData?.['main-image'] || skuItem?.fieldData?.mainImage || productItem?.fieldData?.['main-image'] || productItem?.fieldData?.mainImage || null,
+        'more-images': skuItem?.fieldData?.['more-images'] || skuItem?.fieldData?.moreImages || productItem?.fieldData?.['more-images'] || productItem?.fieldData?.moreImages || [],
         price,
       },
     };
@@ -153,16 +185,18 @@ export async function fetchWebflowProducts() {
   }
 
   const items = await fetchAllCollectionItems(WEBFLOW_PRODUCTS_COLLECTION_ID);
-  const skuPriceMap = await getSkuPriceMap();
+  const skuImageMap = await getSkuImageMap();
   const enrichedItems = items.map((item) => {
-    const price = skuPriceMap.get(item?.id);
-    if (!price) return item;
+    const skuData = skuImageMap.get(item?.id);
+    if (!skuData) return item;
     return {
       ...item,
-      price,
+      ...skuData,
+      price: skuData.price,
       fieldData: {
         ...item.fieldData,
-        price,
+        ...skuData,
+        price: skuData.price,
       },
     };
   });
