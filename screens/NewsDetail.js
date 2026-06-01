@@ -45,7 +45,7 @@ export default function NewsDetail({ route, navigation }) {
     );
   }
 
-  // support different property names from API and fallbacks
+  // Fallbackketen: pak eerst API-velden, dan lokale route-data.
   const rawBody = text || content || description || '';
   const rawSummary = summary || description || '';
   const imageSource = normalizeImageUrl(imageUrl) || normalizeImageUrl(image) || (image && image.uri) || null;

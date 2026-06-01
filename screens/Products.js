@@ -40,6 +40,7 @@ export default function Products({ navigation }) {
       const titleA = String(a.title || '').toLowerCase();
       const titleB = String(b.title || '').toLowerCase();
 
+      // Switch kiest de comparator op basis van `sortBy`.
       switch (sortBy) {
         case 'prijs-laag':
           return priceA - priceB;
@@ -59,6 +60,7 @@ export default function Products({ navigation }) {
 
     async function load() {
       try {
+        // Parallelle API-calls: producten + categorieen in 1 stap.
         const [data, categoryData] = await Promise.all([
           fetchWebflowProducts(),
           fetchWebflowCategories().catch(() => ({ items: [] })),
@@ -73,6 +75,7 @@ export default function Products({ navigation }) {
         const normalized = list.length
           ? list.map((item) => {
               const product = normalizeProduct(item);
+              // Map lookup: categorie-id -> label.
               const categoryLabels = (product.categoryIds || [])
                 .map((categoryId) => categoryLookup.get(categoryId) || '')
                 .filter(Boolean);
@@ -166,6 +169,7 @@ export default function Products({ navigation }) {
             description={item.description}
             price={item.price}
             image={item.imageUrl ? { uri: item.imageUrl } : undefined}
+            // Detail gebruikt dit id om exact item op te halen via API.
             onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
           />
         )}

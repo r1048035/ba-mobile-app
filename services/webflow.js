@@ -39,6 +39,7 @@ async function fetchAllCollectionItems(collectionId) {
   let offset = 0;
   const allItems = [];
 
+  // Paginatie: haal batches op tot de collectie volledig is.
   while (true) {
     const response = await webflowFetch(`/collections/${collectionId}/items`, { limit, offset });
     const items = response.items || response?.data?.items || [];
@@ -124,6 +125,7 @@ async function getSkuImageMap() {
   const skuMap = new Map();
 
   skuItems.forEach((skuItem) => {
+    // SKU-data is gekoppeld via product-id.
     const productId = skuItem?.fieldData?.product;
     if (!productId) return;
 
@@ -156,8 +158,6 @@ async function attachSkuPriceToProduct(productItem) {
   const skuId = productItem?.fieldData?.['default-sku'] || productItem?.fieldData?.defaultSku || productItem?.defaultSku;
   if (!skuId) return productItem;
 
-  const skuCollectionId = await getSkuCollectionId();
-
   try {
     const skuItem = await getSkuItemById(skuId);
     const price = formatSkuPrice(skuItem?.fieldData?.price);
@@ -187,6 +187,7 @@ export async function fetchWebflowProducts() {
   const items = await fetchAllCollectionItems(WEBFLOW_PRODUCTS_COLLECTION_ID);
   const skuImageMap = await getSkuImageMap();
   const enrichedItems = items.map((item) => {
+    // Verrijk product met SKU-velden op basis van product-id.
     const skuData = skuImageMap.get(item?.id);
     if (!skuData) return item;
     return {
@@ -203,7 +204,7 @@ export async function fetchWebflowProducts() {
   try {
     console.log('[webflow] fetchWebflowProducts:', { collectionId: WEBFLOW_PRODUCTS_COLLECTION_ID, count: enrichedItems.length, sample: enrichedItems.slice(0, 5).map(i => i._id || i.id || i.slug) });
   } catch (e) {
-    // ignore logging errors
+    // Logging mag de fetch-flow niet blokkeren.
   }
   return { items: enrichedItems };
 }

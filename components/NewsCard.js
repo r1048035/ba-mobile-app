@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../theme';
 
 export default function NewsCard({ id, title, description, image, date, summary, text, campus, campusColor, imageUrl, category, onPress }) {
-  // When navigating, include richer payload so NewsDetail can show all fields
+  // Geef detaildata mee zodat het detailscherm geen extra mapping nodig heeft.
   const handlePress = () => {
     if (typeof onPress === 'function') {
       const body = text || description || summary || '';

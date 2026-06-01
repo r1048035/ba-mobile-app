@@ -23,7 +23,7 @@ export default function ProductDetail({ route }) {
       try {
         const res = await getProductById(id);
         if (!mounted) return;
-        // webflow v2 might return item or {items: [...]}
+        // Webflow response kan een item of een items-array zijn.
         const raw = res?.items ? res.items[0] : res;
         setItem(normalizeProduct(raw, 0));
       } catch (e) {

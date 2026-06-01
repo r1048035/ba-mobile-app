@@ -46,9 +46,9 @@ function normalizeImageUrl(raw) {
     url = typeof first === 'string' ? first : (first?.url || first?.src || null);
   }
   if (!url) return null;
-  // Fix protocol-relative URLs
+  // Normaliseer protocol-relatieve URL naar https.
   if (url.startsWith('//')) url = 'https:' + url;
-  // Some webflow urls can be objects with fields - return as string if possible
+  // Output is altijd een URL-string.
   return String(url);
 }
 
@@ -70,16 +70,16 @@ function normalizeAddressLines(rawAddress) {
       .map((line) => sanitizeText(line))
       .filter(Boolean);
   }
-  // If it's an object, try common address shapes
+  // Ondersteun meerdere address-shapes uit API/CMS.
   if (typeof rawAddress === 'object') {
-    // If it's already a lines array
+    // Reeds opgesplitste lijnen hebben voorrang.
     if (Array.isArray(rawAddress.addressLines || rawAddress.lines)) {
       return (rawAddress.addressLines || rawAddress.lines)
         .filter(Boolean)
         .map((l) => sanitizeText(l))
         .filter(Boolean);
     }
-    // Try common string properties
+    // Fallback naar gekende stringvelden.
     const candidates = [
       rawAddress.address,
       rawAddress.streetAddress,
@@ -115,7 +115,7 @@ function sanitizeText(raw) {
   try {
     const s = stripHtmlTags(raw);
     const cleaned = decodeEntities(s).trim();
-    // Remove ID-like values (hex or long alphanumeric tokens) that sometimes appear as content
+    // Filter ID-tokens die foutief als tekst meekomen.
     if (/^[0-9a-fA-F_-]{8,}$/.test(cleaned)) return '';
     return cleaned;
   } catch (e) {
@@ -127,15 +127,15 @@ export { sanitizeText, normalizeImageUrl };
 
 export function formatDate(rawDate) {
   if (!rawDate) return '';
-  // If already a Date object
+  // Parseer eerst naar Date voor consistente output.
   try {
     const candidate = typeof rawDate === 'string' ? rawDate.trim() : rawDate;
-    // Try ISO parse
+    // Geldige ISO-datum formatteren naar nl-BE.
     const d = new Date(candidate);
     if (!isNaN(d.getTime())) {
       return d.toLocaleDateString('nl-BE', { year: 'numeric', month: 'long', day: 'numeric' });
     }
-    // Fallback: sanitize and return
+    // Fallback: geef opgeschoonde bronwaarde terug.
     return sanitizeText(String(rawDate));
   } catch (e) {
     return sanitizeText(String(rawDate));
@@ -177,7 +177,7 @@ export function normalizeProduct(item, index = 0) {
 }
 
 function parseAndFormatPrice(raw, itemFallback) {
-  // raw may be empty; if so, try to find a candidate in the whole item
+  // Fallback: zoek prijswaarde dieper in de payload.
   let candidate = raw;
   if ((candidate == null || candidate === '') && itemFallback) {
     const found = findNumericCandidate(itemFallback, 3);
@@ -197,25 +197,25 @@ function parseAndFormatPrice(raw, itemFallback) {
     candidate = nested;
   }
   const rawVal = candidate;
-  // If already a number
+  // Directe number-waarde direct formatteren.
   if (typeof rawVal === 'number' && !isNaN(rawVal)) {
     return new Intl.NumberFormat('nl-BE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(rawVal);
   }
-  // Try to extract numeric part from strings
+  // Extraheer numerieke tekens uit tekstwaarde.
   let s = String(rawVal);
   s = sanitizeText(s);
-  // Remove currency symbols and spaces
+  // Strip valuta-symbolen en spaties.
   s = s.replace(/[^0-9.,-]/g, '');
   if (!s) return '';
-  // Heuristic: if both '.' and ',' exist, assume '.' is thousand sep and ',' is decimal
+  // Zowel punt als komma: punt = duizendtallen.
   if (s.indexOf('.') !== -1 && s.indexOf(',') !== -1) {
     s = s.replace(/\./g, '');
     s = s.replace(/,/g, '.');
   } else if (s.indexOf(',') !== -1 && s.indexOf('.') === -1) {
-    // comma as decimal
+    // Enkel komma: converteer naar decimaal punt.
     s = s.replace(/,/g, '.');
   } else {
-    // only dots or only digits - remove non-digit
+    // Bewaar enkel geldige numerieke tekens.
     s = s.replace(/[^0-9.-]/g, '');
   }
   const n = parseFloat(s);
@@ -227,7 +227,7 @@ function findNumericCandidate(obj, depth = 2) {
   if (!obj || depth < 0) return null;
   if (typeof obj === 'number') return obj;
   if (typeof obj === 'string') {
-    // quick test for numbers inside string
+    // Stop vroeg als de string al een getal bevat.
     if (/[0-9]+[\.,]?[0-9]*/.test(obj)) return obj;
     return null;
   }
@@ -238,9 +238,9 @@ function findNumericCandidate(obj, depth = 2) {
     }
     return null;
   }
-  // object
+  // Doorzoek recursief de objectvelden.
   for (const k of Object.keys(obj)) {
-    // skip large or irrelevant keys
+    // Sla grote objectblokken over voor performantie.
     if (typeof obj[k] === 'object' && obj[k] && Object.keys(obj[k]).length > 50) continue;
     const f = findNumericCandidate(obj[k], depth - 1);
     if (f) return f;
